@@ -15,8 +15,10 @@ CANMotor::CANMotor(PinName rd, PinName td, int dip, int number)
     int id = dip * 16 + number * 2 + offset_id_number;
     _normal_msg.id = id;
     _normal_msg.len = 3;
-    _normal_msg.data[0] = 0x80;
+    _normal_msg.data[0] = 0x00;
     _number = number;
+    
+    _initial_msg.id = id;
 }
 
 CANMotor::CANMotor(PinName rd, PinName td, int id)
@@ -24,7 +26,9 @@ CANMotor::CANMotor(PinName rd, PinName td, int id)
 {
     _normal_msg.id = id;
     _normal_msg.len = 3;
-    _normal_msg.data[0] = 0x80;
+    _normal_msg.data[0] = 0x00;
+    
+    _initial_msg.id = id;
 }
  
 CANMotor::CANMotor(CAN &can_obj, int dip, int number)
@@ -33,8 +37,10 @@ CANMotor::CANMotor(CAN &can_obj, int dip, int number)
     int id = dip * 16 + number * 2 + offset_id_number;
     _normal_msg.id = id;
     _normal_msg.len = 3;
-    _normal_msg.data[0] = 0x80;
+    _normal_msg.data[0] = 0x00;
     _number = number;
+    
+    _initial_msg.id = id;
 }
 
 CANMotor::CANMotor(CAN &can_obj, int id)
@@ -42,7 +48,9 @@ CANMotor::CANMotor(CAN &can_obj, int id)
 {
     _normal_msg.id = id;
     _normal_msg.len = 3;
-    _normal_msg.data[0] = 0x80;
+    _normal_msg.data[0] = 0x00;
+    
+    _initial_msg.id = id;
 }
  
 CANMotor::~CANMotor()
