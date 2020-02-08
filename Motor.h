@@ -5,8 +5,9 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-/** An Motor is base class
-  */
+/** A Motor is abstract base class for moving the motor
+ */
+
 class Motor
 {
 public:
@@ -17,7 +18,7 @@ public:
         CCW, // Counter Clock Wise
         Brake,
 
-        StateTotalNumber,
+        TotalState,
     };
 
     enum DutyCycleChangeLevel
@@ -28,19 +29,18 @@ public:
         High = 6,
         Max = 7,
 
-        DutyCycleChangeLevelTotalNumber,
+        TotalDutyCycleChangeLevel,
     };
 
-    enum Control{
+    enum Control
+    {
         SlowDecay,
         MixedDecay,
         FastDecay,
 
-        ControlTotalNumber,
+        TotalControl,
     };
 
-    /** Create a Motor interface
-    */
     Motor();
 
     /** Set the duty cycle
@@ -99,7 +99,7 @@ public:
     *
     * @param pulse period to set
     */
-    void pulse_period(float second);
+    void pulse_period(float seconds);
 
     /** Set the pulse frequency
     *
