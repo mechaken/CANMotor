@@ -104,7 +104,7 @@ public:
     * @returns
     *    the bus frequency in hertz
     */
-    int frequency() const;
+    int can_frequency() const;
 
     /** Write a CANMessage to the bus.
      *

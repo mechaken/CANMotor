@@ -1,7 +1,7 @@
 /*
   *This software includes the work that is distributed in the Apache License 2.0
   */
- 
+
 #include "Motor.h"
 
 Motor::Motor()
@@ -14,7 +14,7 @@ Motor::Motor()
     _release_time_ms = defalut_release_time_ms;
     _control = (Control)default_control;
 }
- 
+
 void Motor::duty_cycle(float value)
 {
     if ((0.00f <= value) && (value <= 1.00f))
@@ -24,35 +24,35 @@ void Motor::duty_cycle(float value)
 }
 
 float Motor::duty_cycle() const { return _duty_cycle; }
- 
+
 void Motor::state(int type)
 {
-    if ((type >= 0) && (type < StateTotalNumber))
+    if ((type >= 0) && (type < TotalState))
     {
         _state = (State)type;
     }
 }
- 
+
 int Motor::state() const { return _state; }
- 
+
 void Motor::rise_level(int level)
 {
-    if ((0 < level) && (level < DutyCycleChangeLevelTotalNumber))
+    if ((0 < level) && (level < TotalDutyCycleChangeLevel))
     {
         _rise_level = (DutyCycleChangeLevel)level;
     }
 }
- 
+
 int Motor::rise_level() const { return _rise_level; }
- 
+
 void Motor::fall_level(int level)
 {
-    if ((0 < level) && (level < DutyCycleChangeLevelTotalNumber))
+    if ((0 < level) && (level < TotalDutyCycleChangeLevel))
     {
         _fall_level = (DutyCycleChangeLevel)level;
     }
 }
- 
+
 int Motor::fall_level() const { return _fall_level; }
 
 void Motor::pulse_period(float seconds)
@@ -75,7 +75,7 @@ void Motor::release_time_ms(float ms)
 
 void Motor::control(int value)
 {
-    if ((0 < value) && (value < ControlTotalNumber))
+    if ((0 < value) && (value < TotalControl))
     {
         _control = (Control)value;
     }
