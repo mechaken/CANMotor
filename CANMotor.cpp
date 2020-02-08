@@ -76,7 +76,7 @@ int CANMotor::connect()
         wait_us(10000);
     }
 
-    debug_if(_has_received_ack == false, "Don't receive ack.\n");
+    // debug_if(_has_received_ack == false, "Don't receive ack.\n");
 
     return _has_received_ack;
 }
@@ -86,14 +86,20 @@ int CANMotor::decode_can_message(unsigned char *data)
     if (data[0] == 0)
     {
         connect();
+
+        return 1;
     }
     else if (data[0] == 1)
     {
         _has_received_ack = true;
-        debug("received_ack\n");
-    }
+        // debug("received_ack\n");
 
-    return 0;
+        return 2;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 void CANMotor::can_frequency(int hz)
@@ -135,7 +141,7 @@ void CANMotor::update_extention_data()
     // 10   -> DutyCycle Change Level
     // 110  -> release_time
     // 111  -> reserved for future use
-    
+
     int bit_number = 0; // MSBからで、いままで使ったビット数を代入（次のビットを参照するため）
 
     int_encode(2, 2, _initial_msg.data, bit_number); // 初期値設定を示す接頭辞
@@ -181,7 +187,7 @@ void CANMotor::update_extention_data()
         // release_time_ms heder
         int_encode(0b110, 3, _initial_msg.data, bit_number);
         bit_number += 3;
-        
+
         float_to_bfloat16_encode(_release_time_ms, _initial_msg.data, bit_number);
         bit_number += 16;
     }
@@ -219,7 +225,7 @@ int CANMotor::float_to_bfloat16_encode(float value, unsigned char *data, int bit
 {
     if (bit_number + 16 > 64)
         return 1;
-        
+
     uint16_t value_bfloat16 = bfloat16::float32_to_bfloat16(value);
 
     for (int i = 0; i < 16; i++)

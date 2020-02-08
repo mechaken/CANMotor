@@ -16,24 +16,62 @@
   * @code
   * #include "mbed.h"
   * #include "CANMotor.h"
-  *
-  * using namespace nitk;
-  *
-  * static const int id = 0x30;
-  *
-  * CANMotor motor(p9, p10, id, 0);
-  * // CAN can(p9, p10);
-  * // CANMotor motor(can, id, 0);
-  *
+  * 
+  * static const int total_motor = 4;
+  * 
+  * CAN can(p9, p10);
+  * CANMessage msg;
+  * 
+  * CANMotor motor[total_motor] = {
+  *     CANMotor(can, 0, 0);
+  *     CANMotor(can, 0, 1);
+  *     CANMotor(can, 1, 0);
+  *     CANMotor(can, 1, 1);
+  * }
+  * 
+  * void get_can_data()
+  * {
+  *     can.read(msg);
+  *     for (int i = 0; i < total_motor; i++)
+  *     {
+  *         if (motor[i].id() + 1 == msg.id)
+  *         {
+  *             motor[i].decode_can_message(msg.data);
+  *             return;
+  *         }
+  *     }
+  * }
+  * 
   * int main() {
-  *   motor.duty_cycle(0.314);
-  *   motor.state(CW);
-  *   motor.rise_level(Middle);
-  *   motor.fall_level(Low);
-  *
+  *     // モーター0のデューティー比の変化具合を設定
+  *     motor[0].rise_level(Motor::Low);
+  *     motor[0].fall_level(Motor::High);
+  * 
+  *     can.attach(&get_can_data);
+  * 
+  *     for (int i = 0; i < total_motor; i++)
+  *     {
+  *         int j = 0;
+  *         while ((motor[i].connect() == false) && (j++ < 5))
+  *         {
+  *             wait_us(20000);
+  *         }
+  *     }
+  * 
   *   while(true) {
-  *     motor.adapt_setting();
-  *     wait_ms(10);
+  *     // 下のように、それぞれ設定したいモーターに
+  *     // デューティー比と回転方向を入力していく（モーターには書き込まれない）
+  *     motor[3].duty_cycle(0.42);
+  *     motor[3].state(Motor::CW);
+  * 
+  *     for (int i = 0; i < total_motor; i++)
+  *     {
+  *         // motor[x].write() が実行されて初めてモータードライバに設定値が書き込まれる
+  *         int result = motor[i].write(); // motor[x].write() が実行されて初めてモータードライバに設定値が書き込まれる
+  *         
+  *         debug_if(!result, "Couldn't write to can bus.\r");
+  *         wait_us(1000);
+  *     }
   *   }
   * }
   * @endcode
@@ -44,33 +82,33 @@ class CANMotor : public Motor
 public:
     /** Create a CAN Motor interface
     *
-    * @param sda CAN data line pin
-    * @param scl CAN clock line pin
-    * @param id 8-bit CAN slave id [ addr | 0 ]
-    * @param number motor number in this id
+    * @param sda CAN Receiver line pin
+    * @param scl CAN Transmitter line pin
+    * @param dip Slave DPI value
+    * @param number Slave motor number
     */
     CANMotor(PinName rd, PinName td, int dip, int number);
 
     /** Create a CAN Motor interface
     *
-    * @param sda CAN data line pin
-    * @param scl CAN clock line pin
-    * @param id 8-bit CAN slave id [ addr | 0 ]
+    * @param sda CAN Receiver line pin
+    * @param scl CAN Transmitter line pin
+    * @param id Slave id
     */
     CANMotor(PinName rd, PinName td, int id);
 
     /** Create a CAN Motor interface
     *
     * @param can_obj connect to can pins
-    * @param id 8-bit CAN slave id [ addr | 0 ]
-    * @param number motor number in this id
+    * @param dip Slave DPI value
+    * @param number Slave motor number
     */
     CANMotor(CAN &can_obj, int dip, int number);
 
     /** Create a CAN Motor interface
     *
     * @param can_obj connect to can pins
-    * @param id 8-bit CAN slave id [ addr | 0 ]
+    * @param id Slave id
     */
     CANMotor(CAN &can_obj, int id);
 
@@ -78,22 +116,36 @@ public:
 
     /** Set CAN id
     *
-    * @param id 8bit CAN slave id [ addr | 0 ]
+    * @param id Slave id
     */
     void id(int value);
 
     /** Return the CAN id
     *
     * @returns
-    *    the bus id
+    *    the slave id
     */
     int id() const;
 
+    /** Connect MotorDriver
+     * 
+     * @returns
+     *   0 if connect failed,
+     *   1 if connect successful
+     */
     int connect();
 
+    /** Decode can message
+     * 
+     * @param data The data to decode
+     * @returns
+     *   0 if decode failed,
+     *   1 if get initialization data request
+     *   2 if get ack
+     */
     int decode_can_message(unsigned char *data);
 
-    /** Set the frequency of the CAN interface
+    /** Set the frequency of the CAN bus
     *
     *  @param hz The bus frequency in hertz
     */
@@ -112,7 +164,7 @@ public:
      *
      *  @returns
      *    0 if write failed,
-     *    1 if write was successful
+     *    1 if write successful
      */
     virtual int write(void);
 
@@ -120,7 +172,6 @@ public:
     *
     * @param data data to write out on CAN bus
     */
-    // virtual int write_extention(void); // connect()に集約
 
     static const int offset_id_number;
 
@@ -147,16 +198,32 @@ protected:
     void update_state_data();
 
     /** Update the extention data to MotorDriver
-    *
-    * @param type state to update
     */
     void update_extention_data();
 
+    /** Embed integers at specified locations in data
+    * 
+    * @param value Value to embed
+    * @param size Size of value to embed
+    * @param data Write destination data
+    * @param bit_nubmer to start writing
+    * @returns
+    *   0 if failed
+    *   1 if successful  
+    */
     int int_encode(int value, int size, unsigned char *data, int bit_number);
 
+    /** Embed floating point data at specified location in data (convert float to bfloat16)
+    * 
+    * @param value Value to embed
+    * @param size Size of value to embed
+    * @param data Write destination data
+    * @param bit_nubmer to start writing
+    * @returns
+    *   0 if failed
+    *   1 if successful  
+    */
     int float_to_bfloat16_encode(float value, unsigned char *data, int bit_number);
-
-    // int mast_use_write_extention(); // なにこれ？
 };
 
 #endif
