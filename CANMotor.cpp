@@ -6,7 +6,6 @@
 
 #include "Motor.h"
 #include "mbed.h"
-#include <cstdint>
 #include "bfloat16.h"
 
 CANMotor::CANMotor(PinName rd, PinName td, int dip, int number)
@@ -151,7 +150,8 @@ void CANMotor::update_extention_data()
     if ((_rise_level != default_duty_cycle_chenge_level) || (_fall_level != default_duty_cycle_chenge_level))
     {
         // DutyCycle Change Level heder
-        int_encode(0b10, 2, _initial_msg.data, bit_number);
+        // 10
+        int_encode(2, 2, _initial_msg.data, bit_number);
         bit_number += 2;
 
         int_encode(_rise_level, 3, _initial_msg.data, bit_number);
@@ -164,7 +164,8 @@ void CANMotor::update_extention_data()
     if (_control != default_control)
     {
         // control heder
-        int_encode(0b011, 3, _initial_msg.data, bit_number);
+        // 011
+        int_encode(3, 3, _initial_msg.data, bit_number);
         bit_number += 3;
 
         int_encode(_control - 1, 1, _initial_msg.data, bit_number);
@@ -175,7 +176,8 @@ void CANMotor::update_extention_data()
     if (_pulse_period != default_pulse_period)
     {
         // pulse_period heder
-        int_encode(0b010, 3, _initial_msg.data, bit_number);
+        // 010
+        int_encode(2, 3, _initial_msg.data, bit_number);
         bit_number += 3;
 
         float_to_bfloat16_encode(_pulse_period, _initial_msg.data, bit_number);
@@ -185,7 +187,8 @@ void CANMotor::update_extention_data()
     if (_release_time_ms != defalut_release_time_ms)
     {
         // release_time_ms heder
-        int_encode(0b110, 3, _initial_msg.data, bit_number);
+        // 110
+        int_encode(5, 3, _initial_msg.data, bit_number);
         bit_number += 3;
 
         float_to_bfloat16_encode(_release_time_ms, _initial_msg.data, bit_number);
