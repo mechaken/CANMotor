@@ -7,6 +7,9 @@
 
 #include "Motor.h"
 #include "mbed.h"
+#include "CANMotorManager.h"
+
+class CANMotorManager;
 
 /** An CAN Motor is used to controll CAN motor driver
   *
@@ -16,30 +19,18 @@
   * @code
   * #include "mbed.h"
   * #include "CANMotor.h"
+  * #include "CANMotorManager.h"
   * 
   * static const int total_motor = 4;
   * 
   * CAN can(p9, p10);
-  * CANMessage msg;
+  * CANMotorManager motor_mng(can);
   * 
   * CANMotor motor[total_motor] = {
-  *     CANMotor(can, 0, 0);
-  *     CANMotor(can, 0, 1);
-  *     CANMotor(can, 1, 0);
-  *     CANMotor(can, 1, 1);
-  * }
-  * 
-  * void get_can_data()
-  * {
-  *     can.read(msg);
-  *     for (int i = 0; i < total_motor; i++)
-  *     {
-  *         if (motor[i].id() + 1 == msg.id)
-  *         {
-  *             motor[i].decode_can_message(msg.data);
-  *             return;
-  *         }
-  *     }
+  *     CANMotor(can, motor_mng, 0, 0);
+  *     CANMotor(can, motor_mng, 0, 1);
+  *     CANMotor(can, motor_mng, 1, 0);
+  *     CANMotor(can, motor_mng, 1, 1);
   * }
   * 
   * int main() {
@@ -47,7 +38,6 @@
   *     motor[0].rise_level(Motor::Low);
   *     motor[0].fall_level(Motor::High);
   * 
-  *     can.attach(&get_can_data);
   * 
   *     for (int i = 0; i < total_motor; i++)
   *     {
@@ -82,35 +72,18 @@ class CANMotor : public Motor
 public:
     /** Create a CAN Motor interface
     *
-    * @param sda CAN Receiver line pin
-    * @param scl CAN Transmitter line pin
+    * @param can connect to can pins
     * @param dip Slave DPI value
     * @param number Slave motor number
     */
-    CANMotor(PinName rd, PinName td, int dip, int number);
+    CANMotor(CAN &can, CANMotorManager &mng, int dip, int number);
 
     /** Create a CAN Motor interface
     *
-    * @param sda CAN Receiver line pin
-    * @param scl CAN Transmitter line pin
+    * @param can connect to can pins
     * @param id Slave id
     */
-    CANMotor(PinName rd, PinName td, int id);
-
-    /** Create a CAN Motor interface
-    *
-    * @param can_obj connect to can pins
-    * @param dip Slave DPI value
-    * @param number Slave motor number
-    */
-    CANMotor(CAN &can_obj, int dip, int number);
-
-    /** Create a CAN Motor interface
-    *
-    * @param can_obj connect to can pins
-    * @param id Slave id
-    */
-    CANMotor(CAN &can_obj, int id);
+    CANMotor(CAN &can, CANMotorManager &mng, int id);
 
     ~CANMotor();
 
@@ -143,7 +116,7 @@ public:
      *   1 if get initialization data request
      *   2 if get ack
      */
-    int decode_can_message(unsigned char *data);
+    int decode(unsigned char *data);
 
     /** Set the frequency of the CAN bus
     *
@@ -168,16 +141,11 @@ public:
      */
     virtual int write(void);
 
-    /** Write extention_data to CAN bus
-    *
-    * @param data data to write out on CAN bus
-    */
-
     static const int offset_id_number;
 
 protected:
-    CAN *_can_p;
     CAN &_can;
+    CANMotorManager &_mng;
     CANMessage _normal_msg;
     CANMessage _initial_msg;
 
