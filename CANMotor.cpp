@@ -6,10 +6,12 @@
 
 #include "Motor.h"
 #include "mbed.h"
+#include <cstdint>
+#include "CANMotorManager.h"
 #include "bfloat16.h"
 
-CANMotor::CANMotor(PinName rd, PinName td, int dip, int number)
-    : _can_p(new CAN(rd, td)), _can(*_can_p)
+CANMotor::CANMotor(CAN &can, CANMotorManager &mng, int dip, int number)
+    : _can(can), _mng(mng)
 {
     int id = dip * 16 + number * 2 + offset_id_number;
     _normal_msg.id = id;
@@ -18,47 +20,31 @@ CANMotor::CANMotor(PinName rd, PinName td, int dip, int number)
     _number = number;
 
     _initial_msg.id = id;
+
+    _mng.add(this);
 }
 
-CANMotor::CANMotor(PinName rd, PinName td, int id)
-    : _can_p(new CAN(rd, td)), _can(*_can_p)
+CANMotor::CANMotor(CAN &can, CANMotorManager &mng, int id)
+    :  _can(can), _mng(mng)
 {
     _normal_msg.id = id;
     _normal_msg.len = 3;
     _normal_msg.data[0] = 0x00;
 
     _initial_msg.id = id;
-}
 
-CANMotor::CANMotor(CAN &can_obj, int dip, int number)
-    : _can_p(NULL), _can(can_obj)
-{
-    int id = dip * 16 + number * 2 + offset_id_number;
-    _normal_msg.id = id;
-    _normal_msg.len = 3;
-    _normal_msg.data[0] = 0x00;
-    _number = number;
-
-    _initial_msg.id = id;
-}
-
-CANMotor::CANMotor(CAN &can_obj, int id)
-    : _can_p(NULL), _can(can_obj)
-{
-    _normal_msg.id = id;
-    _normal_msg.len = 3;
-    _normal_msg.data[0] = 0x00;
-
-    _initial_msg.id = id;
+    _mng.add(this);
 }
 
 CANMotor::~CANMotor()
 {
-    if (NULL != _can_p)
-        delete _can_p;
+    _mng.erase(this);
 }
 
-void CANMotor::id(int id) { _normal_msg.id = id; }
+void CANMotor::id(int id)
+{
+    _normal_msg.id = id;
+}
 
 int CANMotor::id() const { return _normal_msg.id; }
 
@@ -72,7 +58,7 @@ int CANMotor::connect()
     int i = 0;
     while ((_has_received_ack == false) && (i++ < 10))
     {
-        wait_us(10000);
+        wait_us(10000); // 10ms
     }
 
     // debug_if(_has_received_ack == false, "Don't receive ack.\n");
@@ -80,7 +66,7 @@ int CANMotor::connect()
     return _has_received_ack;
 }
 
-int CANMotor::decode_can_message(unsigned char *data)
+int CANMotor::decode(unsigned char *data)
 {
     if (data[0] == 0)
     {
@@ -97,7 +83,8 @@ int CANMotor::decode_can_message(unsigned char *data)
     }
     else
     {
-        return 0;
+        debug("ERROR, CANNOT DECODE CMESSAGE.");
+        return 0; // error
     }
 }
 
@@ -150,8 +137,7 @@ void CANMotor::update_extention_data()
     if ((_rise_level != default_duty_cycle_chenge_level) || (_fall_level != default_duty_cycle_chenge_level))
     {
         // DutyCycle Change Level heder
-        // 10
-        int_encode(2, 2, _initial_msg.data, bit_number);
+        int_encode(0b10, 2, _initial_msg.data, bit_number);
         bit_number += 2;
 
         int_encode(_rise_level, 3, _initial_msg.data, bit_number);
@@ -164,8 +150,7 @@ void CANMotor::update_extention_data()
     if (_control != default_control)
     {
         // control heder
-        // 011
-        int_encode(3, 3, _initial_msg.data, bit_number);
+        int_encode(0b011, 3, _initial_msg.data, bit_number);
         bit_number += 3;
 
         int_encode(_control - 1, 1, _initial_msg.data, bit_number);
@@ -176,8 +161,7 @@ void CANMotor::update_extention_data()
     if (_pulse_period != default_pulse_period)
     {
         // pulse_period heder
-        // 010
-        int_encode(2, 3, _initial_msg.data, bit_number);
+        int_encode(0b010, 3, _initial_msg.data, bit_number);
         bit_number += 3;
 
         float_to_bfloat16_encode(_pulse_period, _initial_msg.data, bit_number);
@@ -187,8 +171,7 @@ void CANMotor::update_extention_data()
     if (_release_time_ms != defalut_release_time_ms)
     {
         // release_time_ms heder
-        // 110
-        int_encode(5, 3, _initial_msg.data, bit_number);
+        int_encode(0b110, 3, _initial_msg.data, bit_number);
         bit_number += 3;
 
         float_to_bfloat16_encode(_release_time_ms, _initial_msg.data, bit_number);
