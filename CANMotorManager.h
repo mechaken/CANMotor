@@ -13,6 +13,8 @@
 
 class CANMotor;
 
+/** An CANMotorManager, controls all CANMotor
+ */
 class CANMotorManager
 {
 public:
