@@ -16,12 +16,28 @@ class CANMotor;
 class CANMotorManager
 {
 public:
+    /** Create a CAN Motor Manager interface
+    *
+    * @param can connect to can pins
+    */
     CANMotorManager(CAN &can);
+    
     ~CANMotorManager();
 
+    /** Register additional instances of CAN Motor
+     */
     void add(CANMotor *ptr);
+
+    /** Delete the registered CAN Motor instance
+     */
     void erase(CANMotor *ptr);
+
+    /** Connect to all CAN Motors
+     */
     int connect_all(int interval_ms = 100);
+
+    /** Write to all CAN Motors
+     */
     int write_all(int interval_ms = 5);
 
 private:
@@ -31,7 +47,9 @@ private:
     static std::vector<CANMotor*> _motor_ptr;
     static SingletonPtr<PlatformMutex> _mutex;
 
-    void decode();
+    /** Parse CAN message
+     */
+    void parse();
 
     /** Acquire exclusive access to this motor_ptr
      */

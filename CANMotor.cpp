@@ -66,7 +66,7 @@ int CANMotor::connect()
     return _has_received_ack;
 }
 
-int CANMotor::decode(unsigned char *data)
+int CANMotor::parse(unsigned char *data)
 {
     if (data[0] == 0)
     {
@@ -83,7 +83,7 @@ int CANMotor::decode(unsigned char *data)
     }
     else
     {
-        debug("ERROR, CANNOT DECODE CMESSAGE.");
+        debug("ERROR, CANNOT parse CMESSAGE.");
         return 0; // error
     }
 }
