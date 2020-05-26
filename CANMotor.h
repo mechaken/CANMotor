@@ -19,7 +19,6 @@ class CANMotorManager;
   * @code
   * #include "mbed.h"
   * #include "CANMotor.h"
-  * #include "CANMotorManager.h"
   * 
   * static const int total_motor = 4;
   * 
@@ -38,7 +37,7 @@ class CANMotorManager;
   *     motor[0].rise_level(Motor::Low);
   *     motor[0].fall_level(Motor::High);
   * 
-  * 
+  *     // motor_mng.connect_all(); // 下のfor文とほぼ同じ
   *     for (int i = 0; i < total_motor; i++)
   *     {
   *         int j = 0;
@@ -54,6 +53,7 @@ class CANMotorManager;
   *     motor[3].duty_cycle(0.42);
   *     motor[3].state(Motor::CW);
   * 
+  *     // motor_mng.write_all(); // 下のfor文とほぼ同じ
   *     for (int i = 0; i < total_motor; i++)
   *     {
   *         // motor[x].write() が実行されて初めてモータードライバに設定値が書き込まれる
@@ -108,15 +108,15 @@ public:
      */
     int connect();
 
-    /** Decode can message
+    /** parse can message
      * 
-     * @param data The data to decode
+     * @param data The data to parse
      * @returns
-     *   0 if decode failed,
+     *   0 if parse failed,
      *   1 if get initialization data request
      *   2 if get ack
      */
-    int decode(unsigned char *data);
+    int parse(unsigned char *data);
 
     /** Set the frequency of the CAN bus
     *

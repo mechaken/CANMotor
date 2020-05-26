@@ -16,7 +16,7 @@ SingletonPtr<PlatformMutex> CANMotorManager::_mutex;
 CANMotorManager::CANMotorManager(CAN &can)
     : _can(can)
 {
-    _can.attach(callback(this, &CANMotorManager::decode));
+    _can.attach(callback(this, &CANMotorManager::parse));
 }
 
 CANMotorManager::~CANMotorManager()
@@ -91,7 +91,7 @@ int CANMotorManager::write_all(int interval_ms)
     return miss;
 }
 
-void CANMotorManager::decode()
+void CANMotorManager::parse()
 {
     _can.read(_msg);
 
@@ -99,7 +99,7 @@ void CANMotorManager::decode()
     {
         if ((*itr)->id() == _msg.id)
         {
-            (*itr)->decode(_msg.data);
+            (*itr)->parse(_msg.data);
             break;
         }
     }
