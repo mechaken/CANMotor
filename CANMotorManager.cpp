@@ -53,18 +53,14 @@ int CANMotorManager::connect_all(int interval_ms)
     for(std::vector<CANMotor*>::iterator itr = _motor_ptr.begin(); itr != _motor_ptr.end(); ++itr)
     {
         int timeout = 0;
-        while(1)
+        while(((*itr)->connect() == false))
         {
-            if(((*itr)->connect() == false) && (timeout++ < 3))
+            wait_us(interval_us);
+            
+            if (timeout++ >= 3)
             {
-                wait_us(interval_us);
-            }
-            else
-            {
-                // debug("Connect: %d\n", (*itr)->id());
-                wait_us(10000); // 10ms
-                miss++;
-                break;
+                    miss++;
+                    break;
             }
         }
     }
