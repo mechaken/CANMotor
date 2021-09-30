@@ -16,7 +16,7 @@ SingletonPtr<PlatformMutex> CANMotorManager::_mutex;
 CANMotorManager::CANMotorManager(CAN &can)
     : _can(can)
 {
-    _can.attach(callback(this, &CANMotorManager::parse));
+//    _can.attach(callback(this, &CANMotorManager::parse));
 }
 
 CANMotorManager::~CANMotorManager()
@@ -47,25 +47,26 @@ void CANMotorManager::erase(CANMotor *ptr)
 
 int CANMotorManager::connect_all(int interval_ms)
 {
-    int miss = 0;
-    int interval_us = interval_ms * 1000;
-
-    for(std::vector<CANMotor*>::iterator itr = _motor_ptr.begin(); itr != _motor_ptr.end(); ++itr)
-    {
-        int timeout = 0;
-        while(((*itr)->connect() == false))
-        {
-            wait_us(interval_us);
-            
-            if (timeout++ >= 3)
-            {
-                    miss++;
-                    break;
-            }
-        }
-    }
-
-    return miss;
+    return 0;
+//    int miss = 0;
+//    int interval_us = interval_ms * 1000;
+//
+//    for(std::vector<CANMotor*>::iterator itr = _motor_ptr.begin(); itr != _motor_ptr.end(); ++itr)
+//    {
+//        int timeout = 0;
+//        while(((*itr)->connect() == false))
+//        {
+//            wait_us(interval_us);
+//            
+//            if (timeout++ >= 3)
+//            {
+//                    miss++;
+//                    break;
+//            }
+//        }
+//    }
+//
+//    return miss;
 }
 
 int CANMotorManager::write_all(int interval_ms)
@@ -89,16 +90,16 @@ int CANMotorManager::write_all(int interval_ms)
 
 void CANMotorManager::parse()
 {
-    _can.read(_msg);
-
-    for(std::vector<CANMotor*>::iterator itr = _motor_ptr.begin(); itr != _motor_ptr.end(); ++itr)
-    {
-        if ((*itr)->id() == _msg.id)
-        {
-            (*itr)->parse(_msg.data);
-            break;
-        }
-    }
+//    _can.read(_msg);
+//
+//    for(std::vector<CANMotor*>::iterator itr = _motor_ptr.begin(); itr != _motor_ptr.end(); ++itr)
+//    {
+//        if ((*itr)->id() == _msg.id)
+//        {
+//            (*itr)->parse(_msg.data);
+//            break;
+//        }
+//    }
 }
 
 void CANMotorManager::lock()
