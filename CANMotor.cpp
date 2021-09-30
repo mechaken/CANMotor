@@ -50,42 +50,43 @@ int CANMotor::id() const { return _normal_msg.id; }
 
 int CANMotor::connect()
 {
-    _has_received_ack = false;
+//    _has_received_ack = false;
+//
+//    update_extention_data();
+//    _can.write(_initial_msg);
+//
+//    int i = 0;
+//    while ((_has_received_ack == false) && (i++ < 10))
+//    {
+//        wait_us(10000); // 10ms
+//    }
+//
+//    // debug_if(_has_received_ack == false, "Don't receive ack.\n");
 
-    update_extention_data();
-    _can.write(_initial_msg);
-
-    int i = 0;
-    while ((_has_received_ack == false) && (i++ < 10))
-    {
-        wait_us(10000); // 10ms
-    }
-
-    // debug_if(_has_received_ack == false, "Don't receive ack.\n");
-
-    return _has_received_ack;
+    return true;
 }
 
 int CANMotor::parse(unsigned char *data)
 {
-    if (data[0] == 0)
-    {
-        connect();
-
-        return 1;
-    }
-    else if (data[0] == 1)
-    {
-        _has_received_ack = true;
-        // debug("received_ack\n");
-
-        return 2;
-    }
-    else
-    {
-        debug("ERROR, CANNOT parse CMESSAGE.");
-        return 0; // error
-    }
+    return 1;
+//    if (data[0] == 0)
+//    {
+//        connect();
+//
+//        return 1;
+//    }
+//    else if (data[0] == 1)
+//    {
+//        _has_received_ack = true;
+//        // debug("received_ack\n");
+//
+//        return 2;
+//    }
+//    else
+//    {
+//        debug("ERROR, CANNOT parse CMESSAGE.");
+//        return 0; // error
+//    }
 }
 
 void CANMotor::can_frequency(int hz)
